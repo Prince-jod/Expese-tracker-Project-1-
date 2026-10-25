@@ -32,7 +32,7 @@ const ipAndEmailKey = (req) => {
 // Max 5 FAILED attempts per 15 min for the same IP + email (successful logins don't count).
 const loginAccountLimiter = rateLimit({
   windowMs: 15 * MINUTE,
-  limit: 5,
+  limit: 3,
   skipSuccessfulRequests: true,
   keyGenerator: ipAndEmailKey,
   standardHeaders: "draft-7",
