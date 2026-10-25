@@ -9,6 +9,7 @@ const PAGE_SIZE = 5;
 
 export default function ExpenseList({
   expenses, // already filtered + sorted by the Dashboard
+  allExpenses,
   filters,
   setFilters,
   months,   
