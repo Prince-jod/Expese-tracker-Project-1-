@@ -246,6 +246,7 @@ const filtered = useMemo(() => {
 
         <ExpenseList
           expenses={filtered}
+          allExpenses={expenses}
           filters={filters}
           setFilters={setFilters}
           months={months}
