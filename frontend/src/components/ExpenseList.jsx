@@ -127,7 +127,7 @@ export default function ExpenseList({
     aria-label="Filter by year"
   >
     <option value="">All years</option>
-    {[...new Set(expenses.map((e) => new Date(e.date).getFullYear()))]
+    {[...new Set(allExpenses.map((e) => new Date(e.date).getFullYear()))]
       .sort((a, b) => b - a)
       .map((year) => (
         <option key={year} value={year}>
