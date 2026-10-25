@@ -1,11 +1,25 @@
 // Expense table with search, category / month filters, sorting and export.
 // On phones the table turns into stacked cards (pure CSS, see index.css).
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Pencil, Trash2, Download, FileText, FileSpreadsheet, Plus, Inbox, Crown } from "lucide-react";
 import { CATEGORIES, CATEGORY_META } from "../utils/categories.js";
 import { formatMoney, formatDate, monthLabel } from "../utils/format.js";
 
-const PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 10;
+
+const PAGE_SIZE_OPTIONS = [5, 8, 10, 20, 30, 40];
+
+const getSavedPageSize = () => {
+  try {
+    const saved = Number(localStorage.getItem("expensePageSize"));
+
+    return PAGE_SIZE_OPTIONS.includes(saved)
+      ? saved
+      : DEFAULT_PAGE_SIZE;
+  } catch {
+    return DEFAULT_PAGE_SIZE;
+  }
+};
 
 export default function ExpenseList({
   expenses, // already filtered + sorted by the Dashboard
@@ -21,13 +35,46 @@ export default function ExpenseList({
   onDelete,
   onExport,
 }) {
-  const [visible, setVisible] = useState(PAGE_SIZE);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [pageSize, setPageSize] = useState(getSavedPageSize);
+const [currentPage, setCurrentPage] = useState(1);
+const [exportOpen, setExportOpen] = useState(false);
 
   const update = (patch) => {
-    setFilters({ ...filters, ...patch });
-    setVisible(PAGE_SIZE); // go back to the first page when filters change
-  };
+  setFilters((previous) => ({ ...previous, ...patch }));
+  setCurrentPage(1);
+};
+
+  const totalPages = Math.ceil(expenses.length / pageSize);
+useEffect(() => {
+  const safeTotalPages = Math.ceil(expenses.length / pageSize);
+
+  if (safeTotalPages === 0) {
+    setCurrentPage(1);
+  } else if (currentPage > safeTotalPages) {
+    setCurrentPage(safeTotalPages);
+  }
+}, [currentPage, expenses.length, pageSize]);
+const startIndex = (currentPage - 1) * pageSize;
+
+const paginatedExpenses = expenses.slice(
+  startIndex,
+  startIndex + pageSize
+);
+
+const handlePageSizeChange = (e) => {
+  const newSize = Number(e.target.value);
+
+  if (!PAGE_SIZE_OPTIONS.includes(newSize)) return;
+
+  setPageSize(newSize);
+  setCurrentPage(1);
+
+  try {
+    localStorage.setItem("expensePageSize", String(newSize));
+  } catch {
+    // Continue working even if localStorage is unavailable.
+  }
+};
 
   return (
     <div className="card">
@@ -181,7 +228,7 @@ export default function ExpenseList({
               </tr>
             </thead>
             <tbody>
-              {expenses.slice(0, visible).map((e) => {
+              {paginatedExpenses.map((e) => {
                 const meta = CATEGORY_META[e.category] || CATEGORY_META.Other;
                 const Icon = meta.icon;
                 return (
@@ -209,12 +256,59 @@ export default function ExpenseList({
               })}
             </tbody>
           </table>
+          <div className="pagination-controls">
+  <label htmlFor="pageSize">Expenses per page:</label>
 
-          {expenses.length > visible && (
-            <button className="btn btn-ghost btn-block" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-              Show more ({expenses.length - visible} left)
-            </button>
-          )}
+  <select
+    id="pageSize"
+    value={pageSize}
+    onChange={handlePageSizeChange}
+  >
+    {PAGE_SIZE_OPTIONS.map((size) => (
+      <option key={size} value={size}>
+        {size}
+      </option>
+    ))}
+  </select>
+
+  <span>
+    {expenses.length === 0
+      ? "Showing 0 expenses"
+      : `Showing ${startIndex + 1}–${Math.min(
+          startIndex + pageSize,
+          expenses.length
+        )} of ${expenses.length}`}
+  </span>
+</div>
+{totalPages > 1 && (
+  <div className="pagination-buttons">
+    <button
+      className="btn btn-ghost"
+      disabled={currentPage === 1}
+      onClick={() =>
+        setCurrentPage((page) => Math.max(1, page - 1))
+      }
+    >
+      Previous
+    </button>
+
+    <span>
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button
+      className="btn btn-ghost"
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage((page) => Math.min(totalPages, page + 1))
+      }
+    >
+      Next
+    </button>
+  </div>
+)}
+
+          
         </>
       )}
     </div>

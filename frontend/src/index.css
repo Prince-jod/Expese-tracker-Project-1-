@@ -349,3 +349,32 @@ input::placeholder { color: var(--muted); }
   .donut { width: 180px; height: 180px; }
   .auth-card h2 { font-size: 1.6rem; }
 }
+.pagination-controls,
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.pagination-controls select {
+  min-width: 80px;
+}
+
+.pagination-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .pagination-controls,
+  .pagination-buttons {
+    gap: 8px;
+  }
+
+  .pagination-controls {
+    font-size: 14px;
+  }
+}
