@@ -32,8 +32,15 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [filters, setFilters] = useState({ search: "", category: "", month: "", sort: "date-desc" });
-  const [formState, setFormState] = useState({ open: false, expense: null }); // add/edit modal
+const [filters, setFilters] = useState({
+  search: "",
+  category: "",
+  period: "month",
+  weekDate: "",
+  month: "",
+  year: "",
+  sort: "date-desc",
+});  const [formState, setFormState] = useState({ open: false, expense: null }); // add/edit modal
   const [toDelete, setToDelete] = useState(null); // expense waiting for delete confirmation
   const [deleting, setDeleting] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
@@ -74,22 +81,61 @@ export default function Dashboard() {
   );
 
   // Apply search + category + month filters, then sort
-  const filtered = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
-    const list = expenses.filter(
-      (e) =>
-        (!q || e.title.toLowerCase().includes(q) || e.name.toLowerCase().includes(q)) &&
-        (!filters.category || e.category === filters.category) &&
-        (!filters.month || monthKey(e.date) === filters.month)
-    );
+  // Apply search + category + period filters, then sort
+const filtered = useMemo(() => {
+  const q = filters.search.trim().toLowerCase();
 
-    const [field, dir] = filters.sort.split("-");
-    list.sort((a, b) => {
-      const diff = field === "amount" ? Number(a.amount) - Number(b.amount) : a.date.localeCompare(b.date);
-      return dir === "asc" ? diff : -diff;
-    });
-    return list;
-  }, [expenses, filters]);
+  const list = expenses.filter((e) => {
+    const expenseDate = new Date(e.date);
+    const matchesSearch =
+      !q ||
+      e.title.toLowerCase().includes(q) ||
+      e.name.toLowerCase().includes(q);
+
+    const matchesCategory =
+      !filters.category || e.category === filters.category;
+
+    let matchesPeriod = true;
+
+    if (filters.period === "week" && filters.weekDate) {
+      const selectedDate = new Date(`${filters.weekDate}T12:00:00`);
+
+      const startOfWeek = new Date(selectedDate);
+      startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+      matchesPeriod =
+        expenseDate >= startOfWeek && expenseDate < endOfWeek;
+    }
+
+    if (filters.period === "month" && filters.month) {
+      matchesPeriod = monthKey(e.date) === filters.month;
+    }
+
+    if (filters.period === "year" && filters.year) {
+      matchesPeriod =
+        expenseDate.getFullYear() === Number(filters.year);
+    }
+
+    return matchesSearch && matchesCategory && matchesPeriod;
+  });
+
+  const [field, dir] = filters.sort.split("-");
+
+  list.sort((a, b) => {
+    const diff =
+      field === "amount"
+        ? Number(a.amount) - Number(b.amount)
+        : a.date.localeCompare(b.date);
+
+    return dir === "asc" ? diff : -diff;
+  });
+
+  return list;
+}, [expenses, filters]);
 
   const categoryData = useMemo(() => byCategory(filtered), [filtered]);
 
