@@ -5,7 +5,7 @@ import { Search, Pencil, Trash2, Download, FileText, FileSpreadsheet, Plus, Inbo
 import { CATEGORIES, CATEGORY_META } from "../utils/categories.js";
 import { formatMoney, formatDate, monthLabel } from "../utils/format.js";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 export default function ExpenseList({
   expenses, // already filtered + sorted by the Dashboard
