@@ -11,7 +11,7 @@ export default function ExpenseList({
   expenses, // already filtered + sorted by the Dashboard
   filters,
   setFilters,
-  months,
+  months,   
   loading,
   isPrime,
   hasAny, // are there any expenses at all (before filtering)?
@@ -74,10 +74,67 @@ export default function ExpenseList({
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        <select value={filters.month} onChange={(e) => update({ month: e.target.value })} aria-label="Filter by month">
-          <option value="">All time</option>
-          {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
-        </select>
+        {/* Period filter */}
+<select
+  value={filters.period}
+  onChange={(e) =>
+    update({
+      period: e.target.value,
+      weekDate: "",
+      month: "",
+      year: "",
+    })
+  }
+  aria-label="Filter by period"
+>
+  <option value="week">Week</option>
+  <option value="month">Month</option>
+  <option value="year">Year</option>
+</select>
+
+{/* Week filter */}
+{filters.period === "week" && (
+  <input
+    type="date"
+    value={filters.weekDate}
+    onChange={(e) => update({ weekDate: e.target.value })}
+    aria-label="Select a date within the week"
+  />
+)}
+
+{/* Month filter */}
+{filters.period === "month" && (
+  <select
+    value={filters.month}
+    onChange={(e) => update({ month: e.target.value })}
+    aria-label="Filter by month"
+  >
+    <option value="">All months</option>
+    {months.map((m) => (
+      <option key={m} value={m}>
+        {monthLabel(m)}
+      </option>
+    ))}
+  </select>
+)}
+
+{/* Year filter */}
+{filters.period === "year" && (
+  <select
+    value={filters.year}
+    onChange={(e) => update({ year: e.target.value })}
+    aria-label="Filter by year"
+  >
+    <option value="">All years</option>
+    {[...new Set(expenses.map((e) => new Date(e.date).getFullYear()))]
+      .sort((a, b) => b - a)
+      .map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+  </select>
+)}
 
         <select value={filters.sort} onChange={(e) => update({ sort: e.target.value })} aria-label="Sort">
           <option value="date-desc">Newest first</option>
